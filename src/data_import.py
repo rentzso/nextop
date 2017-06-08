@@ -5,7 +5,10 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from boto.s3.connection import S3Connection
 
-es_client = Elasticsearch()
+host = 'http://{}:{}@localhost:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASSWORD'])
+es_client = Elasticsearch(
+    [host]
+)
 
 ## from http://data.gdeltproject.org/documentation/GDELT-Global_Knowledge_Graph_Codebook-V2.1.pdf
 FIELD_NAMES = [
@@ -54,7 +57,7 @@ def read_csv(tmpfile):
 
 def parse_record(record):
     topics = record['V1THEMES'].split(';') if record['V1THEMES'] else None
-    if len(topics) and topics[-1] == '':
+    if topics is not None and len(topics) and topics[-1] == '':
         topics = topics[:-1]
     date = datetime.strptime(record['V2.1DATE'], '%Y%m%d%H%M%S')
     return {
@@ -67,7 +70,7 @@ def parse_record(record):
 def send_to_elastic(entry):
     if entry['url'] is not None:
         uid = entry.pop('id')
-        es.index(index='documents', doc_type='news', body=entry, id = uid)
+        es_client.index(index='documents', doc_type='news', body=entry, id = uid)
 
 def main():
     bucket_name = 'gdelt-open-data'
