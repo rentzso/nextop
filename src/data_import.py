@@ -44,21 +44,24 @@ def get_key_list(bucket_name, folder):
     for key in bucket.list(prefix=folder, marker=folder):
         yield key
 
-def read_csv(key):
-    tmpfile = '/tmp/s3.csv'
-    key.get_contents_to_filename(tmpfile)
-    rows = csv.reader(tmpfile, delimiter='\t')
-    for row in rows:
-        yield dict(zip(FIELD_NAMES, row))
+def read_csv(tmpfile):
+    with open(tmpfile, 'rU') as f:
+        rows = csv.DictReader(f, fieldnames=FIELD_NAMES, delimiter='\t')
+        # iterate within the context manager to avoid "I/O operation on closed file" error
+        for row in rows:
+            yield row
+
 
 def parse_record(record):
-    topics = record['V1THEMES'].split(';').extend(record['V2ENHANCEDTHEMES'].split(';'))
-    url = record['V2DOCUMENTIDENTIFIER'] if record['V2SOURCECOLLECTIONIDENTIFIER'] else None
+    topics = record['V1THEMES'].split(';') if record['V1THEMES'] else None
+    if len(topics) and topics[-1] == '':
+        topics = topics[:-1]
+    date = datetime.strptime(record['V2.1DATE'], '%Y%m%d%H%M%S')
     return {
         'id': record['GKGRECORDID'],
-        'date': record['V2.1DATE'],
+        'date': date,
         'topics': topics,
-        'url': url
+        'url': record['V2DOCUMENTIDENTIFIER']
     }
 
 def send_to_elastic(entry):
@@ -67,16 +70,20 @@ def send_to_elastic(entry):
         es.index(index='documents', doc_type='news', body=entry, id = uid)
 
 def main():
-    bucket_name = "gdelt-open-data"
-    folder = "v2/gkg"
+    bucket_name = 'gdelt-open-data'
+    folder = 'v2/gkg'
+    tmpfile = '/tmp/s3.csv'
     keys = get_key_list(bucket_name, folder)
     for i, key in enumerate(keys):
-        if i == 2:
+        if i == 1:
             break
-        records = read_csv(key)
+        key.get_contents_to_filename(tmpfile)
+        records = read_csv(tmpfile)
         for record in records:
-            entry = parse_record(record)
-            send_to_elastic(entry)
+            if record['V2SOURCECOLLECTIONIDENTIFIER'] == '1':
+                entry = parse_record(record)
+                print entry
+                send_to_elastic(entry)
 
 if __name__ == '__main__':
     main()
