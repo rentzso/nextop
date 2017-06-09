@@ -34,7 +34,7 @@ def getRecommendations(topics):
     tf_string = """_index['topics']['{}'].tf()"""
     # Sum all the occurences of each topic
     sum_frequencies_script = ' + '.join([
-        tf_string.format(topic.lowercase()) for topic in topics
+        tf_string.format(topic.lower()) for topic in topics
     ])
     # Normalize by the length of the 'topics' field
     script = """({})/Math.max(1, doc['topics'].size())""".format(tf_string)
@@ -43,19 +43,19 @@ def getRecommendations(topics):
         "query": {
             "function_score": {
                 "query": {
-                    "match": { "topics": {} }
+                    "match": { "topics": "%s" }
                 },
                 "script_score" : {
                     "script" : {
-                        "inline": "{}",
+                        "inline": "%s",
                         "lang": "groovy"
                     }
                 }
             }
         }
-    }""".format(topics, script)
+    }""" % (topics, script)
     results = es.search(index="documents", body=query)
-    return [result['_source'] for result in results]
+    return [result['_source'] for result in results['hits']['hits']]
 
 
 def getRandomNews():
@@ -74,5 +74,4 @@ def getRandomNews():
        }
     }
     results = es.search(index="documents", body=query)
-    return results[0]['_source']
-
+    return results['hits']['hits'][0]['_source']
