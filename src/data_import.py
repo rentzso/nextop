@@ -1,10 +1,12 @@
 import csv
 import os
+import sys
 import tempfile
 from datetime import datetime
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, helpers
 from boto.s3.connection import S3Connection
 
+csv.field_size_limit(sys.maxsize)
 host = 'http://{}:{}@localhost:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASSWORD'])
 es_client = Elasticsearch(
     [host]
@@ -61,16 +63,14 @@ def parse_record(record):
         topics = topics[:-1]
     date = datetime.strptime(record['V2.1DATE'], '%Y%m%d%H%M%S')
     return {
-        'id': record['GKGRECORDID'],
+        '_op_type': 'index',
+        '_index': 'documents',
+        '_type': 'news',
+        '_id': record['GKGRECORDID'],
         'date': date,
         'topics': topics,
         'url': record['V2DOCUMENTIDENTIFIER']
     }
-
-def send_to_elastic(entry):
-    if entry['url'] is not None:
-        uid = entry.pop('id')
-        es_client.index(index='documents', doc_type='news', body=entry, id = uid)
 
 def main():
     bucket_name = 'gdelt-open-data'
@@ -78,22 +78,15 @@ def main():
     tmpfile = '/tmp/s3.csv'
     keys = get_key_list(bucket_name, folder)
     for i, key in enumerate(keys):
-        if i == 1:
-            break
+        if i%100 == 0:
+            print i
         key.get_contents_to_filename(tmpfile)
         records = read_csv(tmpfile)
-        for record in records:
-            if record['V2SOURCECOLLECTIONIDENTIFIER'] == '1':
-                entry = parse_record(record)
-                print entry
-                send_to_elastic(entry)
+        entries = [
+            parse_record(record) for record
+            in records if record['V2SOURCECOLLECTIONIDENTIFIER'] == '1'
+        ]
+        helpers.bulk(es_client, entries)
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
