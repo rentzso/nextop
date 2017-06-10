@@ -35,3 +35,4 @@ curl --user $ELASTIC_USER:$ELASTIC_PASSWORD -XPUT 'localhost:9200/documents/_map
 ```
 
 Also it's needed to disable the index refresh before bulk uploads.
+
