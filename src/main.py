@@ -3,7 +3,11 @@ import elasticsearch
 import db
 
 def main():
-    start_document = db.getRandomNews()
+    if len(sys.argv) > 1:
+        seed = sys.argv[1]
+    else:
+        seed = 42
+    start_document = db.getRandomNews(seed)
     print start_document['url']
     print 'Topics: ', start_document['topics'], '\n'
     topics = set(start_document['topics'])

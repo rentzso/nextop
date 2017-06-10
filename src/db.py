@@ -37,7 +37,7 @@ def getRecommendations(topics):
         tf_string.format(topic.lower()) for topic in topics
     ])
     # Normalize by the length of the 'topics' field
-    script = """({})/Math.max(1, doc['topics'].size())""".format(tf_string)
+    script = """Math.abs(({})/Math.max(1, doc['topics'].size()) - 0.75)""".format(tf_string)
     topics = ' '.join(topics)
     query = """{
         "query": {
@@ -58,7 +58,7 @@ def getRecommendations(topics):
     return [result['_source'] for result in results['hits']['hits']]
 
 
-def getRandomNews():
+def getRandomNews(seed):
     query = {
        "size": 1,
        "query": {
@@ -66,7 +66,7 @@ def getRandomNews():
              "functions": [
                 {
                    "random_score": {
-                      "seed": "1477072619038"
+                      "seed": seed
                    }
                 }
              ]
@@ -75,3 +75,4 @@ def getRandomNews():
     }
     results = es.search(index="documents", body=query)
     return results['hits']['hits'][0]['_source']
+
