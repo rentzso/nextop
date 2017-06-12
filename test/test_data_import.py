@@ -31,10 +31,6 @@ class TestImport(unittest.TestCase):
         'V2EXTRASXML': '',
         'V2.1AMOUNTS': '500,people were without power,51;'}
 
-    # def test_csv_read(self):
-    #     rows = data_import.read_csv(self.csv)
-    #     self.assertEqual(rows.next(), self.row_0)
-
     def test_parse_record(self):
         record = data_import.parse_record(self.row_0)
         self.assertEqual(record['topics'],  ['MANMADE_DISASTER', 'MANMADE_DISASTER_WITHOUT_POWER', 'POWER_OUTAGE'])
