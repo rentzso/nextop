@@ -42,6 +42,7 @@ def getRecommendations(topics):
     # We are creating the query as string (and not as JSON) because
     # the elasticsearch json converter escapes single quotes in the groovy script
     query = """{
+        "size": 10,
         "query": {
             "function_score": {
                 "query": {
