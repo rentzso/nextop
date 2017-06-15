@@ -37,8 +37,10 @@ def getRecommendations(topics):
         tf_string.format(topic.lower()) for topic in topics
     ])
     # Normalize by the length of the 'topics' field
-    script = """Math.abs(({})/Math.max(1, doc['topics'].size()) - 0.75)""".format(tf_string)
+    script = """Math.abs(({})/Math.max(1, doc['topics'].size()) - 0.75)""".format(sum_frequencies_script)
     topics = ' '.join(topics)
+    # We are creating the query as string (and not as JSON) because
+    # the elasticsearch json converter escapes single quotes in the groovy script
     query = """{
         "query": {
             "function_score": {
