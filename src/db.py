@@ -44,19 +44,9 @@ def getRecommendations(topics):
     query = """{
         "size": 10,
         "query": {
-            "function_score": {
-                "query": {
-                    "match": { "topics": "%s" }
-                },
-                "script_score" : {
-                    "script" : {
-                        "inline": "%s",
-                        "lang": "groovy"
-                    }
-                }
-            }
+            "match": { "topics": "%s" }
         }
-    }""" % (topics, script)
+    }""" % (topics)
     results = es.search(index="documents", body=query)
     return [result['_source'] for result in results['hits']['hits']]
 
