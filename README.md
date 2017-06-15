@@ -7,7 +7,8 @@ Extracts the topics from each record Loads the GDELT news and the related topics
 Keeps a list of the news each user visited and of the most frequent topics Based on this topics computes the most relevant news articles using a customizable scoring system
 
 # How to run it
-There is a script to load the data into Elasticsearch: `src/data_loadingi.py`
+It depends on the elasticsearch python client.
+To load the data into Elasticsearch, there is a script: `src/data_loadingi.py`
 Then, the main `run.sh` program can simulate a user navigating, first, on a random article, then following NexTop recommendations.
 
 # Additional repositories

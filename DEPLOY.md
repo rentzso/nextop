@@ -1,3 +1,5 @@
+# ELASTICSEARCH NOTES
+
 To enable scripting on elasticsearch, it is necessary to follow these steps:
 1) enable groovy in elasticsearch.xml with this line:
 ```
