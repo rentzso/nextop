@@ -3,18 +3,19 @@ from random import randint
 import os
 
 class Queries(object):
-    
-    def __init__(self):
+
+    def __init__(self, index):
         hosts = [
             host.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASSWORD'])
-            for host in 
+            for host in
             ['http://{}:{}@localhost:9200/',
             'http://{}:{}@ip-10-0-0-8:9200/',
             'http://{}:{}@ip-10-0-0-7:9200/',
             'http://{}:{}@ip-10-0-0-5:9200/']
         ]
         self.es = Elasticsearch(hosts, timeout=900)
-        
+        self.index = index
+
     def random_topics(self):
         seed = randint(-100000, 100000)
         query = {
@@ -31,9 +32,9 @@ class Queries(object):
               }
            }
         }
-        results = self.es.search(index="gdelt", body=query)
+        results = self.es.search(index=self.index, body=query)
         return results['hits']['hits'][0]['_source']['topics']
-    
+
     def get_counts(self, topics):
         counts = []
         for t in topics:
@@ -42,13 +43,13 @@ class Queries(object):
                     "match": {"topics": t}
                 }
             }
-            count = self.es.count(index="gdelt", body=query)['count']
+            count = self.es.count(index=self.index, body=query)['count']
             counts.append((t, count))
         return counts
-    
+
     def filter_by_count(self, counts, threshold=3*10**6):
         return [c[0] for c in counts if c[1] < threshold]
-    
+
     def topic_query(self, topics):
         query = {
             'size':10,
@@ -59,11 +60,11 @@ class Queries(object):
         results = self.es.search(index="gdelt", body=query)
         records = [record['_source'] for record in results['hits']['hits']]
         return {
-            'results': records, 
+            'results': records,
             'took': results['took'],
             'hits': results['hits']['total']
         }
-    
+
     def custom_score(self, topics):
         # The tf_string computes the term frequency of the query term
         tf_string = """_index['topics']['{}'].tf()"""
@@ -95,10 +96,8 @@ class Queries(object):
         results = self.es.search(index="gdelt", body=query)
         records = [record['_source'] for record in results['hits']['hits']]
         return {
-            'results': records, 
+            'results': records,
             'took': results['took'],
             'hits': results['hits']['total']
         }
-    
-        
-        
+
