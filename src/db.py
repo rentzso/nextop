@@ -29,34 +29,26 @@ def getRecommendations(topics):
     }
     ```
     """
-
-    # The tf_string computes the term frequency of the query term
-    tf_string = """_index['topics']['{}'].tf()"""
-    # Sum all the occurences of each topic
-    sum_frequencies_script = ' + '.join([
-        tf_string.format(topic.lower()) for topic in topics
-    ])
-    # Normalize by the length of the 'topics' field
-    script = """Math.abs(({})/Math.max(1, doc['topics'].size()) - 0.75)""".format(sum_frequencies_script)
-    topics = ' '.join(topics)
-    # We are creating the query as string (and not as JSON) because
-    # the elasticsearch json converter escapes single quotes in the groovy script
-    query = """{
-        "size": 10,
+    should = [
+        {"constant_score": {
+            "filter" : {
+                "match": { "topics" :  topic} }}}
+        for topic in topics
+    ]
+    query = {
         "query": {
             "function_score": {
                 "query": {
-                    "match": { "topics": "%s" }
+                    "bool": {"should": should }
                 },
                 "script_score" : {
                     "script" : {
-                        "inline": "%s",
-                        "lang": "groovy"
+                        "inline": "- Math.abs(_score/doc[\u0027num_topics\u0027].value - 0.75)"
                     }
                 }
             }
         }
-    }""" % (topics, script)
+    }
     results = es.search(index="documents", body=query)
     return [result['_source'] for result in results['hits']['hits']]
 
