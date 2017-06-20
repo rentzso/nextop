@@ -3,6 +3,7 @@ from flask import json
 from app import app
 from elasticsearch import Elasticsearch
 import os
+from random import randint
 
 host = 'http://{}:{}@ip-10-0-0-10:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASS'])
 es = Elasticsearch([host], timeout=90)
@@ -16,6 +17,26 @@ def get_recommendations():
         return json.dumps(query_simple(topics))
     else:
         return json.dumps(query_custom(topics))
+
+@app.route('/random')
+def get_random():
+    seed = randint(-10**6, 10**6)
+    query = {
+       "size": 1,
+       "query": {
+          "function_score": {
+             "functions": [
+                {
+                   "random_score": {
+                      "seed": seed
+                   }
+                }
+             ]
+          }
+       }
+    }
+    return json.dumps(_exec_query(query))
+
 
 def query_custom(topics):
     should_clause = [
