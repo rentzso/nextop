@@ -35,7 +35,7 @@ def get_random():
           }
        }
     }
-    return json.dumps(_exec_query(query))
+    return json.dumps(_exec_query(query)[0])
 
 
 def query_custom(topics):
@@ -59,7 +59,7 @@ def query_custom(topics):
             }
         }
     }
-    return _exec_query(query)
+    return {'recommendations': _exec_query(query)}
 
 def query_simple(topics):
     query = {
@@ -67,9 +67,14 @@ def query_simple(topics):
             'match': {'topics': ' '.join(topics)}
         }
     }
-    return _exec_query(query)
+    return {'recommendations': _exec_query(query)}
 
 def _exec_query(query):
     results = es.search(index='documents', body=query)
     app.logger.info('a simple request took {} milliseconds'.format(results['took']))
-    return [result['_source'] for result in results['hits']['hits']]
+    parsed_results = []
+    for result in results['hits']['hits']:
+        parsed_result = result['_source']
+        parsed_result['score'] = result['_score']
+        parsed_results.append(parsed_result)
+    return parsed_results
