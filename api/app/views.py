@@ -46,6 +46,7 @@ def query_custom(topics):
         for topic in topics
     ]
     query = {
+        'size': 10,
         'query': {
             'function_score': {
                 'query': {
@@ -62,9 +63,14 @@ def query_custom(topics):
     return {'recommendations': _exec_query(query)}
 
 def query_simple(topics):
+    should_clause = [
+        {'match': { 'topics' :  topic} }
+        for topic in topics
+    ]
     query = {
+        'size': 10,
         'query': {
-            'match': {'topics': ' '.join(topics)}
+            'bool': {'should': should_clause}
         }
     }
     return {'recommendations': _exec_query(query)}
