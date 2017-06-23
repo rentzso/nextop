@@ -5,8 +5,18 @@ from elasticsearch import Elasticsearch
 import os
 from random import randint
 
-host = 'http://{}:{}@ip-10-0-0-10:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASS'])
-es = Elasticsearch([host], timeout=90)
+hosts = [
+    'http://{}:{}@{}:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASS'], host)
+    for host
+    in os.environ['ELASTIC_HOSTS'].split(',')
+    ]
+
+es = Elasticsearch(hosts, timeout=90)
+
+@app.route('/nextop', methods=['GET'])
+def index():
+    return render_template('index.html')
+
 
 @app.route('/topics', methods=['POST'])
 def get_recommendations():
@@ -37,6 +47,23 @@ def get_random():
     }
     return json.dumps(_exec_query(query)[0])
 
+@app.route('/stats')
+def get_stats():
+    return json.dumps({
+        'false': _exec_query(get_query_stats('false'), 'users'),
+        'true': _exec_query(get_query_stats('true'), 'users')
+    })
+
+def get_query_stats(score_type):
+    return {
+        "size" : 10,
+        "sort" : [
+            { "id" : {"order" : "desc"}}
+        ],
+        "query" : {
+            "match" : {"score_type": score_type}
+        }
+    }
 
 def query_custom(topics):
     should_clause = [
@@ -75,8 +102,8 @@ def query_simple(topics):
     }
     return {'recommendations': _exec_query(query)}
 
-def _exec_query(query):
-    results = es.search(index='documents', body=query)
+def _exec_query(query, index='documents'):
+    results = es.search(index=index, body=query)
     app.logger.info('a simple request took {} milliseconds'.format(results['took']))
     parsed_results = []
     for result in results['hits']['hits']:
