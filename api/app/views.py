@@ -1,5 +1,6 @@
 from flask import request
 from flask import json
+from flask import render_template
 from app import app
 from elasticsearch import Elasticsearch
 import os
