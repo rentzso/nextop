@@ -1,16 +1,18 @@
+import os
 from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
 from app import app
 
+
 class MainHandler(RequestHandler):
    def get(self):
-       self.write('This message comes from Tornado ^_^')
+       self.redirect(os.environ['SLIDES_URL'])
 
 tr = WSGIContainer(app)
 
 application = Application([
-    (r'/tornado', MainHandler),
+    (r'/nextop/slides', MainHandler),
     (r'.*', FallbackHandler, dict(fallback=tr)),
 ])
 
