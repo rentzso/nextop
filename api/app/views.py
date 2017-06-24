@@ -50,13 +50,13 @@ def get_random():
             }
         }
     }
-    return json.dumps(_exec_query(query)[0])
+    return json.dumps(_exec_query(query)[0][0])
 
 @app.route('/stats')
 def get_stats():
     return json.dumps({
-        'false': _exec_query(get_query_stats('false'), 'users'),
-        'true': _exec_query(get_query_stats('true'), 'users')
+        'false': _exec_query(get_query_stats('false')[0], 'users'),
+        'true': _exec_query(get_query_stats('true')[0], 'users')
     })
 
 def get_query_stats(score_type):
@@ -102,7 +102,11 @@ def query_custom(topics):
             }
         }
     }
-    return {'recommendations': _exec_query(query)}
+    recommendations, took = _exec_query(query)
+    return {
+        'recommendations': recommendations,
+        'took': took
+    }
 
 def query_simple(topics):
     should_clause = [
@@ -115,7 +119,11 @@ def query_simple(topics):
             'bool': {'should': should_clause}
         }
     }
-    return {'recommendations': _exec_query(query)}
+    recommendations, took = _exec_query(query)
+    return {
+        'recommendations': recommendations,
+        'took': took
+    }
 
 def _exec_query(query, index='documents'):
     results = es.search(index=index, body=query)
@@ -125,4 +133,4 @@ def _exec_query(query, index='documents'):
         parsed_result = result['_source']
         parsed_result['score'] = result['_score']
         parsed_results.append(parsed_result)
-    return parsed_results
+    return parsed_results, results['took']
