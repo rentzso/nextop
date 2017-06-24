@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>nextTop</title>
+    <link href="../static/c3.css" rel="stylesheet">
+    <style>
+    .c3-axis.c3-axis-x .tick {
+      display: none;
+    }
+    #chart {
+      padding-top: 20px;
+    }
+    svg {
+      padding-top: 60px;
+    }
+    .c3-legend-item text {
+      font-size: 30px;
+    }
+    .tick text {
+      font-size: 15px;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="chart"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+    <script src="../static/c3.min.js"></script>
+    <script>
+      var data1 = ['tf/idf'];
+      var data2 = ['custom score'];
+      var el1 = Math.random()*40 + 10;
+      var el2 = Math.random()*40 + 10;
+      for (var i = 0; i < 6; i++){
+        data1.push(el1);
+        data2.push(el2);
+        el1 += Math.random()/4 + 0.05;
+        el2 += Math.random()/4 + 0.2;
+      }
+      var chart = c3.generate({
+        size: {
+            height: 600
+        },
+        data: {
+          columns: [
+            data1,
+            data2
+          ]
+        },
+        bar: {
+          width: {
+              ratio: 0.5
+          }
+        }
+      });
+      d3.select('#chart svg').append('text')
+          .attr('x', d3.select('#chart svg').node().getBoundingClientRect().width / 2)
+          .attr('y', -16)
+          .attr('text-anchor', 'middle')
+          .style('font-size', '4.8em')
+          .text('NextTop Demo');
+
+      setInterval(function () {
+        var last1 = data1.length;
+        var last2 = data2.length;
+        var new1 = data1[data1.length - 1] + Math.random()/4 + 0.05;
+        var new2 = data2[data2.length - 1] + Math.random()/4 + 0.2;
+        data1.splice(1, 1);
+        data2.splice(1, 1);
+        data1.push(new1);
+        data2.push(new2);
+        chart.load({
+          columns: [
+              data1,
+              data2
+          ]
+        });
+      }, 2000);
+    </script>
+  </body>
+</html
