@@ -39,8 +39,8 @@ def get_random():
                 "query": {
                     "range": {
                         "num_topics": {
-                            "lte": 7,
-                            "gte": 4
+                            "gte": 4,
+                            "lte": 7
                         }
                     }
                 },
@@ -82,7 +82,17 @@ def query_custom(topics):
         'query': {
             'function_score': {
                 'query': {
-                    'bool': {'should': should_clause }
+                    'bool': {
+                        'should': should_clause,
+                        'filter': {
+                            'range': {
+                                'num_topics':{
+                                    'gte': 1,
+                                    'lte': len(topics)
+                                }
+                            }
+                        }
+                    }
                 },
                 'script_score' : {
                     'script' : {

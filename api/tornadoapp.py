@@ -14,7 +14,7 @@ tr = WSGIContainer(app)
 application = Application([
     (r'/nextop/slides', MainHandler),
     (r'.*', FallbackHandler, dict(fallback=tr)),
-])
+], autoreload=True)
 
 if __name__ == '__main__':
     application.listen(80)
