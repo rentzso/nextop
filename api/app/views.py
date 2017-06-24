@@ -33,18 +33,22 @@ def get_recommendations():
 def get_random():
     seed = randint(-10**6, 10**6)
     query = {
-       "size": 1,
-       "query": {
-          "function_score": {
-             "functions": [
-                {
-                   "random_score": {
-                      "seed": seed
-                   }
+        "size": 1,
+        "query": {
+            "function_score": {
+                "query": {
+                    "range": {
+                        "num_topics": {
+                            "lte": 7,
+                            "gte": 4
+                        }
+                    }
+                },
+                "random_score": {
+                    "seed": seed
                 }
-             ]
-          }
-       }
+            }
+        }
     }
     return json.dumps(_exec_query(query)[0])
 
