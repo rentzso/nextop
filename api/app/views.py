@@ -16,7 +16,10 @@ es = Elasticsearch(hosts, timeout=90)
 
 @app.route('/nextop', methods=['GET'])
 def index():
-    return render_template('index.html')
+    return render_template(
+        'index.html', window=os.environ.get('UI_WINDOW', 120),
+        slide=os.environ.get('UI_SLIDE', 5)
+        )
 
 
 @app.route('/topics', methods=['POST'])
@@ -58,19 +61,22 @@ def get_random():
 
 @app.route('/stats')
 def get_stats():
+    timestamp = request.args.get('from')
+    statistics, took = _exec_query(get_query_stats(timestamp))
     return json.dumps({
-        'false': _exec_query(get_query_stats('false')[0], 'users'),
-        'true': _exec_query(get_query_stats('true')[0], 'users')
+        'statistics': statistics,
+        'took': took
     })
 
-def get_query_stats(score_type):
+def get_query_stats(timestamp):
     return {
-        "size" : 10,
-        "sort" : [
-            { "id" : {"order" : "desc"}}
-        ],
+        "size": 10000,
         "query" : {
-            "match" : {"score_type": score_type}
+            "range" : {
+                "timestamp": {
+                    "gte": timestamp
+                }
+            }
         }
     }
 

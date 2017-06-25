@@ -1,80 +1,77 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>nextTop</title>
-    <link href="../static/c3.css" rel="stylesheet">
-    <style>
-    .c3-axis.c3-axis-x .tick {
-      display: none;
-    }
-    #chart {
-      padding-top: 20px;
-    }
-    svg {
-      padding-top: 60px;
-    }
-    .c3-legend-item text {
-      font-size: 30px;
-    }
-    .tick text {
-      font-size: 15px;
-    }
-    </style>
-  </head>
-  <body>
-    <div id="chart"></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../static/c3.min.js"></script>
-    <script>
-      var data1 = ['tf/idf'];
-      var data2 = ['custom score'];
-      var el1 = Math.random()*40 + 10;
-      var el2 = Math.random()*40 + 10;
-      for (var i = 0; i < 6; i++){
-        data1.push(el1);
-        data2.push(el2);
-        el1 += Math.random()/4 + 0.05;
-        el2 += Math.random()/4 + 0.2;
-      }
-      var chart = c3.generate({
-        size: {
-            height: 600
-        },
-        data: {
-          columns: [
-            data1,
-            data2
-          ]
-        },
-        bar: {
-          width: {
-              ratio: 0.5
-          }
-        }
-      });
-      d3.select('#chart svg').append('text')
-          .attr('x', d3.select('#chart svg').node().getBoundingClientRect().width / 2)
-          .attr('y', -16)
-          .attr('text-anchor', 'middle')
-          .style('font-size', '4.8em')
-          .text('NextTop Demo');
+<meta charset="utf-8">
+<style> /* set the CSS */
 
-      setInterval(function () {
-        var last1 = data1.length;
-        var last2 = data2.length;
-        var new1 = data1[data1.length - 1] + Math.random()/4 + 0.05;
-        var new2 = data2[data2.length - 1] + Math.random()/4 + 0.2;
-        data1.splice(1, 1);
-        data2.splice(1, 1);
-        data1.push(new1);
-        data2.push(new2);
-        chart.load({
-          columns: [
-              data1,
-              data2
-          ]
-        });
-      }, 2000);
-    </script>
-  </body>
-</html
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
+</style>
+<body>
+
+<!-- load the d3.js library -->
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// parse the date / time
+
+
+// set the ranges
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);
+
+// append the svg obgect to the body of the page
+// appends a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+var fromTimestamp = Date.now() - {{ window }};
+// Get the data
+d3.csv("/stats?from=" + fromTimestamp, function(error, json) {
+  var data = json.statistics;
+  if (error) throw error;
+
+  // format the data
+  data.forEach(function(d) {
+      d.date = new Date(d.timestamp);
+      d.num_new_topics = +d.num_new_topics;
+  });
+
+  // Scale the range of the data
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y.domain([0, d3.max(data, function(d) { return d.num_new_topics; })]);
+
+  // Add the valueline path.
+
+  // Add the scatterplot
+  svg.selectAll("dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("r", 5)
+      .attr("cx", function(d) { return x(d.date); })
+      .attr("cy", function(d) { return y(d.num_new_topics); });
+
+  // Add the X Axis
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // Add the Y Axis
+  svg.append("g")
+      .call(d3.axisLeft(y));
+
+});
+
+</script>
+</body>
