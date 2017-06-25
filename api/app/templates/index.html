@@ -45,12 +45,12 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
   // format the data
   data.forEach(function(d) {
       d.date = new Date(d.timestamp);
-      d.num_new_topics = +d.num_new_topics;
+      d.num_new_user_topics = +d.num_new_user_topics;
   });
 
   // Scale the range of the data
   x.domain(d3.extent(data, function(d) { return d.date; }));
-  y.domain([0, d3.max(data, function(d) { return d.num_new_topics; })]);
+  y.domain([0, d3.max(data, function(d) { return d.num_new_user_topics; })]);
 
   // Add the valueline path.
 
@@ -60,7 +60,7 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
     .enter().append("circle")
       .attr("r", 5)
       .attr("cx", function(d) { return x(d.date); })
-      .attr("cy", function(d) { return y(d.num_new_topics); });
+      .attr("cy", function(d) { return y(d.num_new_user_topics); });
 
   // Add the X Axis
   svg.append("g")
