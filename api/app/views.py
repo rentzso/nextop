@@ -62,7 +62,7 @@ def get_random():
 @app.route('/stats')
 def get_stats():
     timestamp = request.args.get('from')
-    statistics, took = _exec_query(get_query_stats(timestamp))
+    statistics, took = _exec_query(get_query_stats(timestamp), 'users')
     return json.dumps({
         'statistics': statistics,
         'took': took
