@@ -50,7 +50,11 @@ def get_random():
             }
         }
     }
-    return json.dumps(_exec_query(query)[0][0])
+    recommendations, took = _exec_query(query)
+    return json.dumps({
+        'recommendations': recommendations,
+        'took': took
+    })
 
 @app.route('/stats')
 def get_stats():
