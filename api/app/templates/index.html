@@ -59,7 +59,7 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
       .data(data)
     .enter().append("circle")
       .attr("r", 2)
-      .attr("fill", function(d){d.score_type ="true"?"red":"blue"})
+      .attr("fill", function(d) {return d.score_type ==="true"?"red":"blue"})
       .attr("cx", function(d) { return x(d.date); })
       .attr("cy", function(d) { return y(d.num_new_user_topics); });
 

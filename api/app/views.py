@@ -17,8 +17,8 @@ es = Elasticsearch(hosts, timeout=90)
 @app.route('/nextop', methods=['GET'])
 def index():
     return render_template(
-        'index.html', window=os.environ.get('UI_WINDOW', 120),
-        slide=os.environ.get('UI_SLIDE', 5)
+        'index.html', window=int(os.environ.get('UI_WINDOW', 120))*1000,
+        slide=int(os.environ.get('UI_SLIDE', 5))*1000
         )
 
 
