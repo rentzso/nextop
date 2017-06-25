@@ -38,7 +38,7 @@ var svg = d3.select("body").append("svg")
           "translate(" + margin.left + "," + margin.top + ")");
 var fromTimestamp = Date.now() - {{ window }};
 // Get the data
-d3.csv("/stats?from=" + fromTimestamp, function(error, json) {
+d3.json("stats?from=" + fromTimestamp, function(error, json) {
   var data = json.statistics;
   if (error) throw error;
 
