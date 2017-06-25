@@ -2,6 +2,7 @@ import os
 from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
+from tornado.httpserver import HTTPServer
 from app import app
 
 
@@ -17,5 +18,7 @@ application = Application([
 ], autoreload=True)
 
 if __name__ == '__main__':
-    application.listen(80)
-    IOLoop.instance().start()
+    server = HTTPServer(application)
+    server.bind(80)
+    server.start(0)
+    IOLoop.current().start()
