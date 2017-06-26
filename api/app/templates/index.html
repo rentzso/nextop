@@ -16,9 +16,9 @@
 <script>
 
 // set the dimensions and margins of the graph
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+var margin = {top: 100, right: 100, bottom: 100, left: 100},
+    width = window.innerWidth - margin.left - margin.right,
+    height = window.innerHeight - margin.top - margin.bottom;
 
 // parse the date / time
 
@@ -50,7 +50,7 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
 
   // Scale the range of the data
   x.domain(d3.extent(data, function(d) { return d.date; }));
-  y.domain([0, d3.max(data, function(d) { return d.num_new_user_topics; })]);
+  y.domain([-1, d3.max(data, function(d) { return d.num_new_user_topics; })]);
 
   // Add the valueline path.
 
@@ -59,7 +59,7 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
       .data(data)
     .enter().append("circle")
       .attr("r", 2)
-      .attr("fill", function(d) {return d.score_type ==="true"?"red":"blue"})
+      .attr("fill", function(d) { return d.score_type === "true" ? "red" : "blue";})
       .attr("cx", function(d) { return x(d.date); })
       .attr("cy", function(d) { return y(d.num_new_user_topics); });
 
