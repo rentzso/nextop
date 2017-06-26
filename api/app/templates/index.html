@@ -16,15 +16,15 @@
 <script>
 
 // set the dimensions and margins of the graph
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+var margin = {top: 100, right: 100, bottom: 100, left: 100},
+    width = window.innerWidth - margin.left - margin.right,
+    height = window.innerHeight - margin.top - margin.bottom;
 
 // parse the date / time
 
 
 // set the ranges
-var x = d3.scaleTime().range([0, width]);
+var x = d3.scaleLinear().range([0, width]);
 var y = d3.scaleLinear().range([height, 0]);
 
 // append the svg obgect to the body of the page
@@ -44,13 +44,13 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
 
   // format the data
   data.forEach(function(d) {
-      d.date = new Date(d.timestamp);
-      d.num_new_user_topics = +d.num_new_user_topics;
+      d.prev_num_topics = d.num_user_topics - d.num_new_user_topics;
   });
 
   // Scale the range of the data
-  x.domain(d3.extent(data, function(d) { return d.date; }));
-  y.domain([0, d3.max(data, function(d) { return d.num_new_user_topics; })]);
+  x.domain([0, d3.max(data, function(d) { return d.prev_num_topics; })]);
+  y.domain([0, d3.max(data, function(d) { return d.took; })]);
+
 
   // Add the valueline path.
 
@@ -60,8 +60,8 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
     .enter().append("circle")
       .attr("r", 2)
       .attr("fill", function(d) {return d.score_type ==="true"?"red":"blue"})
-      .attr("cx", function(d) { return x(d.date); })
-      .attr("cy", function(d) { return y(d.num_new_user_topics); });
+      .attr("cx", function(d) { return x(d.prev_num_topics); })
+      .attr("cy", function(d) { return y(d.took); });
 
   // Add the X Axis
   svg.append("g")

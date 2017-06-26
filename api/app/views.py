@@ -98,7 +98,7 @@ def query_custom(topics):
                             'range': {
                                 'num_topics':{
                                     'gte': 1,
-                                    'lte': len(topics)
+                                    'lte': 20
                                 }
                             }
                         }
