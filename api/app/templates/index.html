@@ -16,7 +16,7 @@
 <script>
 
 // set the dimensions and margins of the graph
-var margin = {top: 100, right: 100, bottom: 100, left: 100},
+var margin = {top: 80, right: 100, bottom: 100, left: 100},
     width = window.innerWidth - margin.left - margin.right,
     height = window.innerHeight - margin.top - margin.bottom;
 
@@ -49,13 +49,16 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
   });
 
   // Scale the range of the data
-  x.domain(d3.extent(data, function(d) { return d.date; }));
+  var max = d3.max(data, function(d) { return d.date; });
+  fromTimestamp = max.getTime();
+  min = new Date(fromTimestamp - {{ window }});
+  x.domain([min, max]);
   y.domain([-1, d3.max(data, function(d) { return d.num_new_user_topics; })]);
 
   // Add the valueline path.
 
   // Add the scatterplot
-  svg.selectAll("dot")
+  svg.selectAll("circle")
       .data(data)
     .enter().append("circle")
       .attr("r", 2)
@@ -66,13 +69,115 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
   // Add the X Axis
   svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x))
+    .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .attr("font-size", 15)
+      .attr("fill", "black")
+      .attr("text-anchor", "end")
+      .text("Time");
+
 
   // Add the Y Axis
   svg.append("g")
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .attr("class", "label")
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .attr("font-size", 15)
+      .attr("fill", "black")
+      .attr("text-anchor", "end")
+      .text("New Topics")
 
+  svg.append("text")
+      .attr("x", width/2)
+      .attr("y", -40)
+      .attr("font-size", 30)
+      .attr("text-anchor", "middle")
+      .text("How many new topics for user click?");
+
+  svg.append("rect")
+    .attr("x", width - 18)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", "blue");
+
+  svg.append("text")
+    .attr("x", width - 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text("nexTop");
+
+  svg.append("rect")
+    .attr("x", width - 18)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", "red")
+    .attr("transform", "translate(0,20)");
+
+  svg.append("text")
+    .attr("x", width - 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text("default")
+    .attr("transform", "translate(0,20)");
 });
+
+function update(){
+  d3.json("stats?from=" + fromTimestamp, function(error, json) {
+    new_data = json.statistics;
+
+    // format the data
+    new_data.forEach(function(d) {
+        d.date = new Date(d.timestamp);
+        d.num_new_user_topics = +d.num_new_user_topics;
+        d.initial_x = x(d.date);
+    });
+    for (var i = 0; i < new_data.length; i++ ) {
+      data.push(new_data[i]);
+    }
+    var max = d3.max(data, function(d) { return d.date; });
+    fromTimestamp = max.getTime();
+    min = new Date(fromTimestamp - {{ window }});
+    x.domain([min, max]);
+    data = data.filter(function(d) {
+      return d.date > min;
+    });
+
+    var dataJoin =
+      svg.selectAll("circle")
+        .data(data, function(d){return d.id;});
+
+    dataJoin
+      .transition(t)
+      .attr("cx", function(d) { return x(d.date); });
+
+    dataJoin
+      .enter()
+        .append("circle")
+        .attr("r", 2)
+        .attr("fill", function(d) { return d.score_type === "true" ? "red" : "blue";})
+        .attr("cy", function(d) { return y(d.num_new_user_topics); })
+        .attr("cx", function(d) { return d.initial_x; })
+        .transition(t)
+        .attr("cx", function(d) { return x(d.date); });
+
+    dataJoin.exit()
+      .transition(t)
+      .attr("cx", function(d) { return x(d.date); });
+      .remove();
+
+    x_axis
+      .transition(t)
+      .call(d3.axisBottom(x));
+  })
+}
 
 </script>
 </body>
