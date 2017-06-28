@@ -19,7 +19,7 @@ There are two recommendations (and score types) available at the moment:
 
 ![nexTop architecture](/../images/img/Architecture.png?raw=true "nexTop architecture")
 
-The main component are:
+The main components are:
 - The ingestion pipeline collecting data from GDELT into Elasticsearch
 - The Flask API matching user topics with recommendations
 - The simulation pipeline, generating user clicks based on the two recommendation systems available and collecting statistics
