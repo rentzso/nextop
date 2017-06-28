@@ -12,7 +12,7 @@ Content discovery engine project - Insight Summer 2017
 
 There are two recommendations (and score types) available at the moment:
 - **simple** - the default Elasticsearch score
-- **custom** - with a scripted score computing the ratio of matched topics over total number of topics
+- **custom** - a scripted score computing the ratio of matched topics over total number of topics
 
 
 # The architecture
