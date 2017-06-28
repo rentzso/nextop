@@ -26,7 +26,8 @@ var margin = {top: 80, right: 100, bottom: 100, left: 100},
 // set the ranges
 var x = d3.scaleTime().range([0, width]);
 var y = d3.scaleLinear().range([height, 0]);
-
+var t = d3.transition()
+      .duration(750);
 // append the svg obgect to the body of the page
 // appends a 'group' element to 'svg'
 // moves the 'group' element to the top left margin
@@ -38,8 +39,10 @@ var svg = d3.select("body").append("svg")
           "translate(" + margin.left + "," + margin.top + ")");
 var fromTimestamp = Date.now() - {{ window }};
 // Get the data
+var data;
+var x_axis;
 d3.json("stats?from=" + fromTimestamp, function(error, json) {
-  var data = json.statistics;
+  data = json.statistics;
   if (error) throw error;
 
   // format the data
@@ -53,7 +56,7 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
   fromTimestamp = max.getTime();
   min = new Date(fromTimestamp - {{ window }});
   x.domain([min, max]);
-  y.domain([-1, d3.max(data, function(d) { return d.num_new_user_topics; })]);
+  y.domain([-2, d3.max(data, function(d) { return d.num_new_user_topics; })]);
 
   // Add the valueline path.
 
@@ -67,9 +70,10 @@ d3.json("stats?from=" + fromTimestamp, function(error, json) {
       .attr("cy", function(d) { return y(d.num_new_user_topics); });
 
   // Add the X Axis
-  svg.append("g")
+  x_axis = svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x))
+      .call(d3.axisBottom(x));
+  x_axis
     .append("text")
       .attr("class", "label")
       .attr("x", width)
@@ -152,11 +156,8 @@ function update(){
 
     var dataJoin =
       svg.selectAll("circle")
-        .data(data, function(d){return d.id;});
+        .data(data, function(d){return d.user_id + "" + d.timestamp;});
 
-    dataJoin
-      .transition(t)
-      .attr("cx", function(d) { return x(d.date); });
 
     dataJoin
       .enter()
@@ -164,20 +165,22 @@ function update(){
         .attr("r", 2)
         .attr("fill", function(d) { return d.score_type === "true" ? "red" : "blue";})
         .attr("cy", function(d) { return y(d.num_new_user_topics); })
+      .merge(dataJoin)
         .attr("cx", function(d) { return d.initial_x; })
         .transition(t)
         .attr("cx", function(d) { return x(d.date); });
 
     dataJoin.exit()
       .transition(t)
-      .attr("cx", function(d) { return x(d.date); });
+      .attr("cx", function(d) { return x(d.date); })
       .remove();
 
     x_axis
       .transition(t)
       .call(d3.axisBottom(x));
+    setTimeout(update, 100);
   })
 }
-
+setTimeout(update, 100);
 </script>
 </body>
