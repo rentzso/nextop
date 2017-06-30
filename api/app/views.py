@@ -7,12 +7,14 @@ import os
 from random import randint
 
 hosts = [
-    'http://{}:{}@{}:9200/'.format(os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASS'], host)
+    'http://{}:{}@{}:9200/'.format(
+        os.environ['ELASTIC_USER'], os.environ['ELASTIC_PASS'], host)
     for host
     in os.environ['ELASTIC_HOSTS'].split(',')
     ]
 
 es = Elasticsearch(hosts, timeout=90)
+
 
 @app.route('/nextop', methods=['GET'])
 def index():
@@ -32,23 +34,24 @@ def get_recommendations():
     else:
         return json.dumps(query_custom(topics))
 
+
 @app.route('/random')
 def get_random():
     seed = randint(-10**6, 10**6)
     query = {
-        "size": 1,
-        "query": {
-            "function_score": {
-                "query": {
-                    "range": {
-                        "num_topics": {
-                            "gte": 4,
-                            "lte": 7
+        'size': 1,
+        'query': {
+            'function_score': {
+                'query': {
+                    'range': {
+                        'num_topics': {
+                            'gte': 4,
+                            'lte': 7
                         }
                     }
                 },
-                "random_score": {
-                    "seed": seed
+                'random_score': {
+                    'seed': seed
                 }
             }
         }
@@ -58,6 +61,7 @@ def get_random():
         'recommendations': recommendations,
         'took': took
     })
+
 
 @app.route('/stats')
 def get_stats():
@@ -68,25 +72,28 @@ def get_stats():
         'took': took
     })
 
+
 def get_query_stats(timestamp):
     return {
-        "size": 10000,
-        "query" : {
-            "range" : {
-                "timestamp": {
-                    "gte": timestamp
+        'size': 10000,
+        'query': {
+            'range': {
+                'timestamp': {
+                    'gte': timestamp
                 }
             }
         }
     }
 
+
 def query_custom(topics):
     should_clause = [
         {'constant_score': {
-            'filter' : {
-                'match': { 'topics' :  topic} }}}
+            'filter': {
+                'match': {'topics':  topic}}}}
         for topic in topics
     ]
+    script = '- Math.abs(_score/doc[\'num_topics\'].value - 0.75)'
     query = {
         'size': 10,
         'query': {
@@ -96,7 +103,7 @@ def query_custom(topics):
                         'should': should_clause,
                         'filter': {
                             'range': {
-                                'num_topics':{
+                                'num_topics': {
                                     'gte': 1,
                                     'lte': len(topics)
                                 }
@@ -104,9 +111,9 @@ def query_custom(topics):
                         }
                     }
                 },
-                'script_score' : {
-                    'script' : {
-                        'inline': '- Math.abs(_score/doc[\'num_topics\'].value - 0.75)'
+                'script_score': {
+                    'script': {
+                        'inline': script
                     }
                 }
             }
@@ -118,9 +125,10 @@ def query_custom(topics):
         'took': took
     }
 
+
 def query_simple(topics):
     should_clause = [
-        {'match': { 'topics' :  topic} }
+        {'match': {'topics':  topic}}
         for topic in topics
     ]
     query = {
@@ -135,9 +143,11 @@ def query_simple(topics):
         'took': took
     }
 
+
 def _exec_query(query, index='documents'):
     results = es.search(index=index, body=query)
-    app.logger.info('a simple request took {} milliseconds'.format(results['took']))
+    app.logger.info(
+        'a simple request took {} milliseconds'.format(results['took']))
     parsed_results = []
     for result in results['hits']['hits']:
         parsed_result = result['_source']

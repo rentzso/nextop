@@ -7,8 +7,8 @@ from app import app
 
 
 class MainHandler(RequestHandler):
-   def get(self):
-       self.redirect(os.environ['SLIDES_URL'])
+    def get(self):
+        self.redirect(os.environ['SLIDES_URL'])
 
 tr = WSGIContainer(app)
 
