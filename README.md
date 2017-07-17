@@ -1,11 +1,12 @@
 # nexTop
 
-NexTop is my project for the Insight Summer 2017 session, a content discovery system of news articles based on topics.<br>
-The general idea is to recommend to the users contents that are relevant but also new and fresh.<br>
+This is my project for the Insight Summer 2017 session, nexTop, a content discovery system of news articles based on topics.<br>
+The general idea is to recommend to the users contents that are relevant but also new and fresh. The main component used to do this is Elasticsearch and its flexible scoring system ([details here](#supported-recommendations)).<br>
+
 The system has three main functional components (see also the [architecture](#the-architecture) section):
 - Collecting and storing news urls for the recommendations
-- Generating the recommendations using multiple scoring systems
-- Comparing the recommendation systems
+- Generating recommendations using multiple scoring systems
+- Comparing these systems
 
 In more detail these are the high level steps performed by nexTop:
 - Reads news urls from [the GDELT dataset](https://aws.amazon.com/public-datasets/gdelt/)
@@ -47,18 +48,18 @@ The Flask API ([code](https://github.com/rentzso/nextop/blob/master/api/app/view
 
 ### Supported recommendations
 
-For the `topics` endpoint there are two recommendation (and score) types used by the system at the moment:
+For the `topics` endpoint there are two recommendation (and score) types implemented at the moment:
 - **simple** - the default Elasticsearch score (Okapi BM25, a tf-idf-like similarity score)
 - **custom** - a scripted custom score
 
-Both recommendations receive a list of user topics and finds the best scores among the list of all documents which have at least one matching topic.<br>
+Both recommendations receive a list of user topics and find the best scores among the list of all documents which have at least one matching topic.<br>
 The **simple** recommendation type ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L183)) computes its score summing up all the Elasticsearch scores from the matching user topic. In this setup a less frequent topic will contribute more than a common topic to the final score and the top scorers will be the documents matching more user topics.<br>
-In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article the score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes for the same amount to the final score, and all the scores are in the range `[0, 1]`. However the recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
+In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article the score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes for the same amount to the final score, and all the scores are in the range 0 to 1. However the recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
 
 ## The user simulation component
 
-This component generates user behavior (sequences of user clicks) by using the Flask API recommendations multiple times.<br>
-It then collects the simulated user statistics and, using a Kafka Producer, publishes them ([Avro schema](https://github.com/rentzso/simulatedUser/blob/master/src/main/resources/avroSchemas/user-stats-avro-schema.json)) to a Kafka topic.<br>
+This component generates user behavior (sequences of user clicks) by using the Flask API recommendations multiple times.
+It then collects the simulated user statistics and, using a Kafka Producer, publishes them as Avro messages ([schema](https://github.com/rentzso/simulatedUser/blob/master/src/main/resources/avroSchemas/user-stats-avro-schema.json)) to a Kafka topic.
 A Spark Streaming consumer reads from the Kafka topic and stores the statistics on Elasticsearch.
 
 Simulation component repositories:
