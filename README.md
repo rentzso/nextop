@@ -25,7 +25,7 @@ These are [the slides of my presentation](https://docs.google.com/presentation/d
 The main components are:
 - The ingestion pipeline collecting data from the GDELT Dataset into Elasticsearch
 - The Flask API matching user topics with document topics in Elasticsearch and returning recommendations
-- The simulation pipeline, generating user clicks based on the two recommendation systems available and collecting statistics
+- The user simulation component, generating user clicks based on the two recommendation systems available and collecting statistics
 
 ## The ingestion pipeline
 
@@ -55,11 +55,12 @@ Both recommendations receive a list of user topics and finds the best scores amo
 The **simple** recommendation type ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L183)) computes its score summing up all the Elasticsearch scores from the matching user topic. In this setup a less frequent topic will contribute more than a common topic to the final score and the top scorers will be the documents matching more user topics.<br>
 In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article the score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes for the same amount to the final score, and all the scores are in the range `[0, 1]`. However the recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
 
-## The simulation pipeline
+## The user simulation component
 
-This pipeline generates user clicks with a Kafka Producer to simulate user behavior and to store the click information in a Kafka topic.<br>
-A Spark Streaming process reads from the Kafka topic and stores these statistics on Elasticsearch.
+This component generates user behavior (sequences of user clicks) by using the Flask API recommendations multiple times.<br>
+It then collects the simulated user statistics and, using a Kafka Producer, publishes them ([Avro schema](https://github.com/rentzso/simulatedUser/blob/master/src/main/resources/avroSchemas/user-stats-avro-schema.json)) to a Kafka topic.<br>
+A Spark Streaming consumer reads from the Kafka topic and stores the statistics on Elasticsearch.
 
-Simulation pipeline repositories:
-- [Kafka Producer that simulates users](https://github.com/rentzso/simulatedUser)
+Simulation component repositories:
+- [User simulator and Kafka Producer](https://github.com/rentzso/simulatedUser)
 - [Spark Streaming consumer](https://github.com/rentzso/userStatsStreaming)
