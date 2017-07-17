@@ -1,19 +1,20 @@
-# NexTop
-Content discovery engine project - Insight Summer 2017
+# nexTop - Insight Summer 2017
+
+NexTop is my project for Insight Summer 2017. It is a content discovery system of news articles based on topics.<br>
+The general idea is to recommend to the users contents that are relevant but also new to them.
 
 ## How it works
 - Uses the GDELT dataset from the Global Knowledge Graph
-- Extracts the topics from each record
+- Extracts the topics from each record in the dataset
 - Loads the GDELT news and the related topics in the Elasticsearch database
 - Keeps a list of the news each user visited and of the most frequent topics
 - Based on these topics computes the most relevant news articles using a customizable scoring system
 - Simulates user clicks based on these recommendations
 - Collects statistics from this simulation
 
-There are two recommendations (and score types) available at the moment:
-- **simple** - the default Elasticsearch score
+There are two recommendation (and score) types available at the moment:
+- **simple** - the default Elasticsearch score (Okapi BM25, a tf-idf-like similarity score)
 - **custom** - a scripted score computing the ratio of matched topics over total number of topics
-
 
 # The architecture
 
@@ -21,17 +22,18 @@ There are two recommendations (and score types) available at the moment:
 
 The main components are:
 - The ingestion pipeline collecting data from GDELT into Elasticsearch
-- The Flask API matching user topics with recommendations
+- The Flask API matching user topics with document topics and returning recommendations
 - The simulation pipeline, generating user clicks based on the two recommendation systems available and collecting statistics
 
 ## The ingestion pipeline
 
-To load data into Elasticsearch, I created one Kafka Producer to load data from S3 into a Kafka topic.<br>
-A Spark Streaming job was pulling the messages from the topic and transfering the data into Elasticsearch via the native client library elasticsearch-hadoop.
+To load data into Elasticsearch, I created one Kafka Producer reading and parsing data from the [GDELT S3 Dataset](https://aws.amazon.com/public-datasets/gdelt/) into an [Avro schema](https://github.com/rentzso/producerS3/blob/master/src/main/resources/avroSchemas/parsed-gdelt-avro-schema.json).<br>
+Each parsed record (news url, date, related topics) was published to a Kafka topic.<br>
+The messages were read by a Spark Streaming consumer and stored into Elasticsearch via the native client library elasticsearch-hadoop.
 
 Ingestion pipeline repositories:
-- https://github.com/rentzso/producerS3 - the Kafka producer connected to S3
-- https://github.com/rentzso/newsStreaming - the Spark Streaming consumer
+- [Kafka producer connected to S3](https://github.com/rentzso/producerS3)
+- [Spark Streaming consumer](https://github.com/rentzso/newsStreaming)
 
 ## The Flask API
 
@@ -47,6 +49,5 @@ This pipeline generates user clicks with a Kafka Producer to simulate user behav
 A Spark Streaming process reads from the Kafka topic and stores these statistics on Elasticsearch.
 
 Simulation pipeline repositories:
-- https://github.com/rentzso/simulatedUser - The Kafka Producer
-- https://github.com/rentzso/userStatsStreaming - The Spark Streaming consumer
-
+- [Kafka Producer](https://github.com/rentzso/simulatedUser)
+- [The Spark Streaming consumer](https://github.com/rentzso/userStatsStreaming)
