@@ -1,32 +1,18 @@
 # nexTop
 
-This is my project for the Insight Summer 2017 session, nexTop, a content discovery system of news articles based on topics.<br>
-The general idea is to recommend to the users contents that are relevant but also new and fresh. The main component used to do this is Elasticsearch and its flexible scoring system ([details here](#supported-recommendations)).<br>
+My project for the Insight Data Engineering Summer 2017 session is a content discovery system of news articles based on topics.<br>
+The general idea is to recommend to the users contents that are relevant but also new and fresh. The main component used to do this is Elasticsearch and its flexible scoring system. Elasticsearch allowed to implement and compare two recommendation systems, one using a more traditional tf-idf relevance score and another, the nexTop scoring system, designed to deliver recommendations with a mix of topics, some relevant, some new to the users ([details here](#supported-recommendations)).
 
-The system has three main functional components (see also the [architecture](#the-architecture) section):
-- Collecting and storing news urls for the recommendations
-- Generating recommendations using multiple scoring systems
-- Comparing these systems
-
-In more detail these are the high level steps performed by nexTop:
-- Reads news urls from [the GDELT dataset](https://aws.amazon.com/public-datasets/gdelt/)
-- Extracts the topics from each record in the dataset
-- Loads the GDELT news and the related topics in the Elasticsearch database
-- Keeps a list of the news each user visited and of the topics she was exposed to
-- Based on these topics computes the most relevant news articles using a customizable scoring system
-- Simulates user clicks based on these recommendations
-- Collects statistics from this simulation
-
-These are [the slides of my presentation](https://docs.google.com/presentation/d/19dMRsMbs9zlJMDJpl5r7eY-QOlvzOLiLVmAlL-bc98w).
+[Slides of the presentation](https://docs.google.com/presentation/d/19dMRsMbs9zlJMDJpl5r7eY-QOlvzOLiLVmAlL-bc98w).
 
 # The architecture
-
-![nexTop architecture](/../images/img/Architecture.png?raw=true "nexTop architecture")
 
 The main components are:
 - The ingestion pipeline collecting data from the GDELT Dataset into Elasticsearch
 - The Flask API matching user topics with document topics in Elasticsearch and returning recommendations
 - The user simulation component, generating user clicks based on the two recommendation systems available and collecting statistics
+
+![nexTop architecture](/../images/img/Architecture.png?raw=true "nexTop architecture")
 
 ## The ingestion pipeline
 
@@ -53,8 +39,8 @@ For the `topics` endpoint there are two recommendation (and score) types impleme
 - **custom** - a scripted custom score
 
 Both recommendations receive a list of user topics and find the best scores among the list of all documents which have at least one matching topic.<br>
-The **simple** recommendation type ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L183)) computes its score summing up all the Elasticsearch scores from the matching user topic. In this setup a less frequent topic will contribute more than a common topic to the final score and the top scorers will be the documents matching more user topics.<br>
-In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article the score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes for the same amount to the final score, and all the scores are in the range 0 to 1. However the recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
+The **simple** recommendation type ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L183)) computes its score summing up all the Elasticsearch scores from the matching user topics. In this setup a less frequent topic will contribute more than a common topic to the final score and the top scorers will be the documents matching more user topics.<br>
+In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article its score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes equally to the final score, and all the scores are in the range 0 to 1. The recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
 
 ## The user simulation component
 
