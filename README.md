@@ -9,8 +9,9 @@ The general idea is to recommend to the users contents that are relevant but als
 
 The main components are:
 - The ingestion pipeline collecting data from the GDELT Dataset into Elasticsearch
-- The Flask API matching user topics with document topics in Elasticsearch and returning recommendations
 - The user simulation component, generating user clicks based on the two recommendation systems available and collecting statistics
+- The Flask API matching user topics with document topics in Elasticsearch and returning recommendations
+
 
 ![nexTop architecture](/../images/img/Architecture.png?raw=true "nexTop architecture")
 
@@ -23,6 +24,17 @@ The messages were read by a Spark Streaming consumer and stored into Elasticsear
 Ingestion pipeline repositories:
 - [Kafka producer connected to S3](https://github.com/rentzso/producerS3)
 - [Spark Streaming consumer](https://github.com/rentzso/newsStreaming)
+
+## The user simulation component
+
+This component generates user behavior (sequences of user clicks) by using the Flask API recommendations multiple times.
+It then collects the simulated user statistics and, using a Kafka Producer, publishes them as Avro messages ([schema](https://github.com/rentzso/simulatedUser/blob/master/src/main/resources/avroSchemas/user-stats-avro-schema.json)) to a Kafka topic.
+A Spark Streaming consumer reads from the Kafka topic and stores the statistics on Elasticsearch.<br>
+There are two groups of simulated users, one receiving traditional recommendations and one receiving nexTop recommendations.
+
+Simulation component repositories:
+- [User simulator and Kafka Producer](https://github.com/rentzso/simulatedUser)
+- [Spark Streaming consumer](https://github.com/rentzso/userStatsStreaming)
 
 ## The Flask API
 
@@ -42,12 +54,4 @@ Both recommendations receive a list of user topics and find the best scores amon
 The **simple** recommendation type ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L183)) computes its score summing up all the Elasticsearch scores from the matching user topics. In this setup a less frequent topic will contribute more than a common topic to the final score and the top scorers will be the documents matching more user topics.<br>
 In the **custom** recommendation ([code](https://github.com/rentzso/nextop/blob/master/api/app/views.py#L142)), for a news article its score is the ratio of matched user topics over the number of topics related to the document. So each matching topic contributes equally to the final score, and all the scores are in the range 0 to 1. The recommended news are not the top scorers but rather the documents with the scores closest to a configurable target score (0.75 at the moment). This means that a recommendation will require a minimum number of matching topics but also a minimum number of non matching, fresh topics.
 
-## The user simulation component
 
-This component generates user behavior (sequences of user clicks) by using the Flask API recommendations multiple times.
-It then collects the simulated user statistics and, using a Kafka Producer, publishes them as Avro messages ([schema](https://github.com/rentzso/simulatedUser/blob/master/src/main/resources/avroSchemas/user-stats-avro-schema.json)) to a Kafka topic.
-A Spark Streaming consumer reads from the Kafka topic and stores the statistics on Elasticsearch.
-
-Simulation component repositories:
-- [User simulator and Kafka Producer](https://github.com/rentzso/simulatedUser)
-- [Spark Streaming consumer](https://github.com/rentzso/userStatsStreaming)
