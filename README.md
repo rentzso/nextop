@@ -3,7 +3,7 @@
 My project for the Insight Data Engineering Summer 2017 session is a content discovery system of news articles based on topics.<br>
 The general idea is to recommend to the users contents that are relevant but also new and fresh. The main component used to do this is Elasticsearch and its flexible scoring system. Elasticsearch allowed to implement and compare two recommendation systems, one using a more traditional tf-idf relevance score and another, the nexTop scoring system, designed to deliver recommendations with a mix of topics, some relevant, some new to the users ([details here](#supported-recommendations)).
 
-[Slides of the presentation](https://docs.google.com/presentation/d/19dMRsMbs9zlJMDJpl5r7eY-QOlvzOLiLVmAlL-bc98w).
+[Slides of the presentation](https://docs.google.com/presentation/d/1gc-oZdsEOaqaYCiWOQDFCTgxXzoqoqbvAGlZagGOGNo).
 
 # The architecture
 
